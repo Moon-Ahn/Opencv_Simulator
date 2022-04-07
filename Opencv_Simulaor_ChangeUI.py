@@ -6,11 +6,36 @@ import os.path
 import numpy as np
 import time
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTextBrowser
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QVBoxLayout, QTextBrowser, QComboBox
 import itertools
 
 global k
 k = 2
+
+def Filters(filter,frame) :
+
+    if (filter == 0) :
+        frame = frame
+    elif (filter == 1) :
+        frame = cv2.medianBlur(frame, 5)
+    elif (filter == 2):
+        try :
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)  # gray scale
+        except :
+            pass
+    elif (filter == 3) :
+
+        try :
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            lower_red = cv2.inRange(hsv, (0, 70, 50), (10, 255, 255))
+            upper_red = cv2.inRange(hsv, (170, 70, 50), (180, 255, 255))
+            added_red = cv2.addWeighted(lower_red, 1.0, upper_red, 1.0, 0.0)
+            frame = cv2.bitwise_and(frame, frame, mask=added_red)
+
+        except :
+            pass
+
+    return frame
 
 class MyApp(QWidget):
 
@@ -19,50 +44,55 @@ class MyApp(QWidget):
         self.initUI()
 
     def initUI(self):
-        btn1 = QPushButton('동영상 재생', self)
-        btn2 = QPushButton('Normal && Reset', self)
-        btn3 = QPushButton('Median Filter', self)
-        btn4 = QPushButton('Gray Filter', self)
-        btn5 = QPushButton('Red Filter', self)
-        btn6 = QPushButton('Pixel Crol', self)
-        btn7 = QPushButton('파일 리스트', self)
-        #btn8 = QPushButton('ADD',self)
+        btn1 = QPushButton('동영상 재생 / 초기화', self)
+        self.btn2 = QPushButton('Red Detection', self)
+        btn3 = QPushButton('파일 리스트', self)
 
-        btn1.move(600, 20)
+        self.cb1 = QComboBox(self)
+        self.cb1.addItems(['Filter', 'Median', 'Gray', 'Red'])
+        self.cb2 = QComboBox(self)
+        self.cb2.addItems(['Filter', 'Median', 'Gray', 'Red'])
+        self.cb3 = QComboBox(self)
+        self.cb3.addItems(['Filter', 'Median', 'Gray', 'Red'])
+        self.cb4 = QComboBox(self)
+        self.cb4.addItems(['Filter', 'Median', 'Gray', 'Red'])
+
+
+
+        btn1.move(700, 70)
         btn1.resize(150, 50)
-        btn2.move(600, 100)
-        btn2.resize(150, 50)
-        btn3.move(600, 180)
+        self.btn2.move(700, 150)
+        self.btn2.resize(150, 50)
+        btn3.move(700, 230)
         btn3.resize(150, 50)
-        btn4.move(600, 260)
-        btn4.resize(150, 50)
-        btn5.move(600, 340)
-        btn5.resize(150, 50)
-        btn6.move(600, 420)
-        btn6.resize(150, 50)
-        btn7.move(600, 500)
-        btn7.resize(150, 50)
-        #btn8.move(770, 210)
-        #btn8.resize(100, 100)
+
+        self.cb1.move(50,80)
+        self.cb1.resize(100,30)
+        self.cb2.move(200, 80)
+        self.cb2.resize(100, 30)
+        self.cb3.move(350, 80)
+        self.cb3.resize(100, 30)
+        self.cb4.move(500, 80)
+        self.cb4.resize(100, 30)
 
         self.text = QTextBrowser(self)
-        self.text.resize(500, 500)
-        self.text.move(30,30)
+        self.text.resize(800, 200)
+        self.text.move(50,300)
 
         self.setWindowTitle('Window')
         self.setGeometry(300, 300, 900, 600)
         self.show()
 
         btn1.clicked.connect(self.Video_Open)
-        btn2.clicked.connect(self.Video_Normal)
-        btn3.clicked.connect(self.Video_Median)
-        btn4.clicked.connect(self.Video_Gray)
-        btn5.clicked.connect(self.Video_Red)
-        btn6.clicked.connect(self.Video_Pixel)
-        btn7.clicked.connect(self.Read_error)
+        self.btn2.setCheckable(True)
+        self.btn2.clicked.connect(self.Video_Pixel)
+        btn3.clicked.connect(self.Read_error)
 
     def Video_Open(self):
         videoFile='C:/Users/ahw/Desktop/sim1/1.mp4'
+
+
+        #print(self.cb1.currentText())
         cap = cv2.VideoCapture(videoFile)
         #double fps = cap.get(CAP_PROP_FPS)# 동영상 프레임 확인 https://thebook.io/006939/ch04/01/03-01/
         # cap = cv2.VideoCapture(0) #캠화면
@@ -74,60 +104,38 @@ class MyApp(QWidget):
 
             if ret:
 
-                ## button filter
-
-
-
-
-
-
-                ## 지속되지 않는 영상값을 하고싶다면 filtered를 frame으로 교체하면 됨//
-
-
-
-
 
 
                 #cv2.moveWindow(winname, 40, 30)  # 동영상윈도우 위치조정
                 #cv2.resizeWindow(winname, 800, 600)
                 #print(k)
 
-                if (k == 2) :
-                    filtered = frame
-                elif (k == 3) :
-                    median = cv2.medianBlur(filtered, 5)  # 5x5 median filter
-                    filtered = median
-                elif (k == 4) :
-                    gray = cv2.cvtColor(filtered, cv2.COLOR_BGR2GRAY)  # gray scale
-                    filtered = gray
-                elif (k == 5) :
-                    hsv = cv2.cvtColor(filtered, cv2.COLOR_BGR2HSV)
-                    lower_red = cv2.inRange(hsv, (0, 70, 50), (10, 255, 255))
-                    upper_red = cv2.inRange(hsv, (170, 70, 50), (180, 255, 255))
-                    added_red = cv2.addWeighted(lower_red, 1.0, upper_red, 1.0, 0.0)
-                    red = cv2.bitwise_and(filtered, filtered, mask=added_red)
-                    filtered = red
-                elif (k == 6) :
-                    ######################################bounding box############################################
+                #list = [gray,median,red]
 
-                    try :
-                        hsv = cv2.cvtColor(filtered, cv2.COLOR_BGR2HSV)
+                frame = Filters(filter=self.cb1.currentIndex(),frame=frame)
+                frame = Filters(filter=self.cb2.currentIndex(), frame=frame)
+                frame = Filters(filter=self.cb3.currentIndex(), frame=frame)
+                frame = Filters(filter=self.cb4.currentIndex(), frame=frame)
+
+                    ######################################bounding box############################################
+                if k == 6 :
+                    try:
+                        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
                         lower_red = cv2.inRange(hsv, (0, 70, 50), (10, 255, 255))
                         upper_red = cv2.inRange(hsv, (170, 70, 50), (180, 255, 255))
                         added_red = cv2.addWeighted(lower_red, 1.0, upper_red, 1.0, 0.0)
-                        red = cv2.bitwise_and(filtered, filtered, mask=added_red)
+                        red = cv2.bitwise_and(frame, frame, mask=added_red)
                         red_gray = cv2.cvtColor(red, cv2.COLOR_BGR2GRAY)  # gray scale
                         ret, thresh = cv2.threshold(red_gray, 0, 255, cv2.THRESH_BINARY)
                         contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-                        #cnt = contours[1]
+                        # cnt = contours[1]
                         c = max(contours, key=cv2.contourArea)  # 추가
                         x, y, w, h = cv2.boundingRect(c)  # 추가
                         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 3)
-                    except ValueError:
+                    except :
                         pass
-                    filtered = frame
 
-                cv2.imshow("Camera",filtered)
+                cv2.imshow("Camera",frame)
                 #cv2.imshow(winname, frame)
                 if cv2.waitKey(20) & 0xFF == ord('q'):  # q누르면 정지
                     break
@@ -162,9 +170,12 @@ class MyApp(QWidget):
     def Video_Red(self):
         global k
         k = 5
-    def Video_Pixel(self):
+    def Video_Pixel(self,state):
         global k
-        k = 6
+        if self.btn2.isChecked():
+            k = 6
+        else:
+            k = 2
     def Read_error(self): #오류jpg 리스트들을 나태내줌
         myPath = 'C:/Users/ahw/Desktop/sim1'
 
@@ -192,10 +203,15 @@ class MyApp(QWidget):
                 self.text.append(content[int(t)])
                 t=t+1
 
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MyApp()
     sys.exit(app.exec_())
+
+
 
 
 # save jpg list file
